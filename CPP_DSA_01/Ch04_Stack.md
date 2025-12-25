@@ -335,4 +335,158 @@ int main()
 - stack<T, vector<T>> stk(vec)의 trade-off
     - 내부적으로 벡터 전체를 복사한 후 다시 원본에 덮어쓰는 구조
     - 메모리가 원본의 2배가 필요함
-    - 병목이 발생할 수도 있음
+    - 병목이 발생할 수도 
+    
+
+
+---
+# S03. 스택의 응용: 올바른 괄호 검사
+
+
+### 1. 올바른 괄호 검사
+- 괄호만으로 이루어진 문자열이 주어질 때, 괄호의 종류별로 쌍이 제대로 되어 있는지 검사하기
+- 괄호의 종류
+    - [] 대괄호, brackets
+    - {} 중괄호, braces
+    - () 소괄호, parentheses
+
+- 예제
+    - [ 5 + { 2 * (3 + 4 ) } ] * 3
+    - [ { ( ) } ]
+        - 이 괄호들이 정상적인 쌍으로 구성되었는지 확인하는 문제
+
+- 올바른 괄호의 조건
+    - 괄호의 종류별로 여는 괄호와 닫는 괄호의 개수가 같아야함
+    - 같은 종류의 괄호에서 여는 괄호가 닫는 괄호보다 먼저 나타나야 함
+    - 마지막 여는 괄호와 쌍이 되는 닫는 괄호가 먼저 나타나야 함
+
+
+### 2. 올바른 괄호 검사 알고리즘
+- 문자열의 각 문자를 차례대로 검사
+    - 여는 괄호를 만나면 스택에 push
+    - 닫는 괄호를 만나면 
+        - 스택이 비어있으면 false를 반환
+        - 스택의 top에 있는 문자가 현재 닫는 괄호와 쌍을 이루는 여는 괄호인지를 검사
+            - 쌍이 맞으면 스택에서 pop
+            - 쌍이 맞지 않으면 false 반환
+
+- 모든 문자열을 검사한 후 스택이 비어있는지를 검사
+    - 비어 있으면 true 반환
+    - 비어 있지 않으면 false 반환
+
+
+### 3. 실전 구현
+```cpp
+#include <iostream>
+#include <string>
+#include <stack>
+
+using std::cout;
+using std::endl;
+using std::string;
+using std::stack;
+
+bool paren_check(const string& s)
+{
+    stack<char> stk;
+
+    for (char c : s)
+    {
+        if (c == '(' || c == '{' || c == '[')
+            stk.push(c);
+
+        if (c == ')' || c == '}' || c == ']')
+        {
+            if (stk.empty())
+                return false;
+
+            if (
+                (stk.top() == '(' && c == ')') ||
+                (stk.top() == '{' && c == '}') ||
+                (stk.top() == '[' && c == ']') 
+            ) {
+                stk.pop();
+            } 
+            else
+                return false;
+        }
+    }
+
+    if (stk.empty())
+        return true;
+    else
+        return false;
+}
+
+int main()
+{
+    // 옳은 경우
+    cout << paren_check("() {} []") << endl;
+
+    // 옳지 않은 경우
+    cout << paren_check("( { ) }") << endl;
+
+    return 0;
+}
+```
+
+
+### 4. 실전 구현 개선안
+```cpp
+#include <iostream>
+#include <string>
+#include <stack>
+
+using std::cout;
+using std::endl;
+using std::string;
+using std::stack;
+
+bool paren_check(const string& s)
+{
+    stack<char> stk;
+
+    for (char c : s)
+    {
+        if (c == '(' || c == '{' || c == '[')
+        {
+            stk.push(c);
+        }
+        else if (c == ')' || c == '}' || c == ']')
+        {
+            if (
+                !stk.empty() && (
+                (stk.top() == '(' && c == ')') ||
+                (stk.top() == '{' && c == '}') ||
+                (stk.top() == '[' && c == ']') 
+                )
+            ) {
+                stk.pop();
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    return stk.empty();
+}
+
+int main()
+{
+    // 옳은 경우
+    cout << paren_check("() {} []") << endl;
+
+    // 옳지 않은 경우
+    cout << paren_check("( { ) }") << endl;
+
+    return 0;
+}
+```
+
+
+### 5. 추가 내용
+- 왜 괄호 쌍 문제는 스택을 사용할까?
+    - 가장 최근에 열린 괄호가 가장 먼저 닫혀야한다는 특성 때문
+    - LIFO
