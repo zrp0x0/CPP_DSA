@@ -231,5 +231,225 @@ int main()
     - 구현이 복잡
 
 
+
 ---
 # S02. 이중 연결 리스트
+
+
+### 1. 연결 리스트 종류
+- 단순 연결 리스트 (singly linked list)
+    - 다음 노드에 대한 링크만 가지고 있는 연결 리스트
+    - 한쪽 방향으로만 순회(traverse)가 가능 (단방향 연결 리스트)
+        - data
+        - next
+
+- 이중 연결 리스트 (doubly linked list)
+    - 이전 노드와 다음 노드에 대한 링크를 가지고 있는 연결 리스트
+    - 양방향 순회가 가능 (양방향 연결 리스트)
+        - data
+        - next
+        - prev
+
+- 원형 연결 리스트
+    - 일반적인 연결 리스트의 마지막 노드 링크가 처음 노드를 가리키도록 구성된 자료 구조
+    - 처음 노드가 다시 나타나면 순회를 멈춤
+
+
+### 2. 이중 연결 리스트의 구조
+- [ [prev] [data] [next] ]
+```cpp
+struct Node
+{
+    int data;
+    Node* prev;
+    Node* next;
+};
+```
+
+- 더미 노드 (sentinel node)
+    - head node: prev는 NULL / next는 첫 번째 노드
+    - trailer node: prev는 마지막 노드 / next는 NULL
+
+```cpp
+class DoublyLinkedList
+{
+    int count;
+    Node* header;
+    Node* trailer;
+};
+```
+
+
+### 3. 이중 연결 리스트 클래스
+```cpp
+struct Node
+{
+    int data;
+    Node* prev;
+    Node* next;
+};
+
+class DoublyLinkedList
+{
+public:
+    DoublyLinkedList();
+    ~DoublyLinkedList();
+
+    void push_front(int val);
+    void push_back(int val);
+
+    void pop_front();
+    void pop_back();
+
+    void insert(Node* p, int val);
+    void erase(Node* p);
+
+    void print_all(); // 정방향 출력
+    void print_reverse(); // 역방향 출력
+
+    bool empty();
+    unsigned int size();
+
+private:
+    unsigned int count;
+    Node* header;
+    Node* trailer;
+};
+```
+
+
+### 4. 이중 연결 리스트 생성
+```cpp
+DoublyLinkedList()
+{
+    count = 0;
+    header = new Node {0, NULL, NULL};
+    trailer = new Node {0, NULL, NULL};
+
+    header->next = trailer;
+    trailer->prev = header;
+}
+```
+
+
+### 5. 이중 연결 리스트에 원소 삽입
+```cpp
+void insert(Node* p, int val)
+{
+    Node* new_node = new Node {val, p->prev, p};
+
+    new_node->prev->next = new_node;
+    new_node->next->prev = new_node;
+
+    count++;
+}
+
+void push_front(int val)
+{
+    insert(header->next, val);
+}
+
+void push_back(int val)
+{
+    insert(trailer, val);
+}
+```
+
+
+### 6. 이중 연결 리스트에서 노드 삭제하기
+```cpp
+void erase(Node* p)
+{
+    p->next->prev = p->prev;
+    p->prev->next = p->next;
+
+    delete p;
+    p = nullptr;
+    count--;
+}
+
+void pop_front()
+{
+    if (!empty())
+        erase(header->next);
+}
+
+void pop_back()
+{
+    if (!empty())
+        erase(trailer->prev);
+}
+```
+
+
+### 7. 이중 연결 리스트 전체 데이터 출력하기
+```cpp
+void print_all()
+{
+    Node* current_node = header->next;
+
+    while (current_node != trailer)
+    {
+        std::cout << current_node->data << " ";
+        current_node = current_node->next;
+    }
+    std::cout << std::endl;
+}
+
+void print_reverse()
+{
+    Node* current_node = trailer->prev;
+
+    while (current_node != header)
+    {
+        std::cout << current_node->data << " ";
+        current_node = current_node->prev;
+    }
+    std::cout << std::endl;
+}
+```
+
+
+### 8. 이중 연결 리스트 기타 멤버 함수
+```cpp
+bool empty()
+{
+    return count == 0;
+}
+
+unsigned int size()
+{
+    return count;
+}
+```
+
+
+### 9. 이중 연결 리스트 제거
+```cpp
+~DoublyLinkedList()
+{
+    while (!empty())
+    {
+        pop_front();
+    }
+    delete header;
+    delete trailer;
+}
+```
+
+
+### 10. 이중 연결 리스트의 장단점
+- 장점 (단일 연결 리스트 대비)
+    - 링크가 양방향이므로 양방향 검색이 가능
+
+- 단점 (단일 연결 리스트 대비)
+    - 이전 노드 링크를 위한 여분의 공간 사용
+    - 데이터의 삽입과 삭제 구현이 좀 더 복잡
+
+
+
+---
+# S03. 향상된 이중 연결 리스트 클래스
+
+
+### 1. 
