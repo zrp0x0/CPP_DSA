@@ -452,4 +452,480 @@ unsigned int size()
 # S03. 향상된 이중 연결 리스트 클래스
 
 
-### 1. 
+### 1. DoublyLinkedList 클래스에 추가할 기능
+- 반복자(iterator) 지원
+- 데이터 검색 기능
+- 범용 데이터 저장을 위한 클래스 템플릿 작성
+
+
+### 2. 반복자 지원
+- DoublyLinkedList 클래스에 begin()과 end() 멤버 함수 추가
+```cpp
+iterator begin() const
+{
+    return iterator(header->next);
+}
+
+iterator end() const
+{
+    return iterator(trailer);
+}
+```
+
+
+### 3. 반복자 기반으로 전체 코드 수정
+```cpp
+#include <iostream>
+
+struct Node
+{
+    int data;
+    Node* prev;
+    Node* next;
+};
+
+class DoublyLinkedList
+{
+public:
+    class iterator
+    {
+    private:
+        Node* ptr;
+
+    public:
+        iterator() : ptr(NULL) {}
+        iterator(Node* p) : ptr(p) {}
+
+        int& operator*() { return ptr->data; }
+
+        iterator& operator++() // ++it / 이 강의에서 it++은 생략
+        {
+            this->ptr = this->ptr->next;
+            return *this;
+        }
+
+        iterator& operator--()
+        {
+            ptr = ptr->prev;
+            return *this;
+        }
+
+        bool operator==(const iterator& it) const
+        {
+            return this->ptr == it.ptr;
+        }
+
+        bool operator!=(const iterator& it) const
+        {
+            return this->ptr != it.ptr;
+        }
+
+        friend class DoublyLinkedList;
+    };
+
+public:
+    DoublyLinkedList() 
+    {
+        this->count = 0;
+        this->header = new Node {0, NULL, NULL};
+        this->trailer = new Node {0, NULL, NULL};
+
+        header->next = trailer;
+        trailer->prev = header;
+    }
+
+    ~DoublyLinkedList()
+    {
+        while (!empty())
+        {
+            pop_front();
+        }
+
+        delete header;
+        delete trailer;
+    }
+
+    void push_front(int val)
+    {
+        insert(begin(), val);
+    }
+
+    void push_back(int val)
+    {
+        insert(end(), val);
+    }
+
+    void pop_front()
+    {
+        if (!empty())
+        {
+            erase(begin());
+        }
+    }
+
+    void pop_back()
+    {
+        if (!empty())
+        {
+            erase(--(end()));
+        }
+    }
+
+    void print_all()
+    {
+        Node* current_node = header->next;
+
+        while (current_node != trailer)
+        {
+            std::cout << current_node->data << " ";
+            current_node = current_node->next;
+        }
+        std::cout << std::endl;
+    }
+
+    void print_reverse()
+    {
+        Node* current_node = trailer->prev;
+
+        while (current_node != header)
+        {
+            std::cout << current_node->data << " ";
+            current_node = current_node->prev;
+        }
+        std::cout << std::endl;
+    }
+
+    bool empty()
+    {
+        return count == 0;
+    }
+
+    unsigned int size()
+    {
+        return count;
+    }
+
+    // iterator 관련 메소드
+    iterator begin() const
+    {
+        return iterator(header->next);
+    }
+
+    iterator end() const
+    {
+        return iterator(trailer);
+    }
+
+private:
+    void insert(const iterator& pos, const int& val)
+    {
+        Node* p = pos.ptr;
+        Node* new_node = new Node {val, p->prev, p};
+
+        new_node->next->prev = new_node;
+        new_node->prev->next = new_node;
+
+        count++;
+    }
+
+    void erase(const iterator& pos)
+    {
+        Node* p = pos.ptr;
+
+        p->prev->next = p->next;
+        p->next->prev = p->prev;
+
+        delete p;
+        p = nullptr;
+    
+        count--;
+    }
+
+private:
+    Node* header;
+    Node* trailer;
+    unsigned int count;
+};
+
+int main()
+{
+    DoublyLinkedList dll;
+    dll.push_back(10);
+    dll.push_back(20);
+
+    dll.push_front(30);
+    dll.push_front(40);
+
+    dll.print_all(); // 40 30 10 20
+    dll.print_reverse(); // 20 10 30 40
+
+    dll.pop_back();
+    dll.print_all(); // 40 30 10
+
+    dll.pop_front();
+    dll.print_all(); // 30 10
+
+    std::cout << dll.size() << std::endl;
+
+    return 0;
+}
+```
+
+
+### 4. 데이터 검색 기능
+- DoublyLinkedList 클래스에 find() 멤버 함수 추가
+```cpp
+iterator find(const int val)
+{
+    Node* curr = header->next;
+    while (curr != trailer && curr->data != val)
+    {
+        curr = curr->next;
+    }
+
+    return iterator(curr);
+}
+
+// main
+    auto it = dll.find(20);
+    if (it != dll.end())
+        dll.insert(it, 50);
+```
+
+
+### 5. 범용 데이터 저장을 위한 클래스 템프릿 작성
+- DoublyLinkedList 클래스를 클래스 템플릿으로 변환하기
+    - Node와 DoublyLinkedList 클래스를 모두 typename T를 사용하는 클래스 템플릿으로 변경
+    - Node와 DoublyLinkedList 클래스에서 데이터를 표현하는 int를 T로 바꾸고, Node를 Node<T>로 변경
+```cpp
+template <typename T>
+struct Node
+{
+    T data;
+    Node* prev;
+    Node* next;
+}
+
+template <typename T>
+class DoublyLinkedList
+{
+private:
+    unsigned int count;
+    Node<T>* header;
+    Node<T>* trailer;
+}
+```
+
+
+### 6. 전체 소스 코드
+```cpp
+#include <iostream>
+
+template <typename T>
+struct Node
+{
+    T data;
+    Node* prev;
+    Node* next;
+};
+
+template <typename T>
+class DoublyLinkedList
+{
+public:
+    class iterator
+    {
+    private:
+        Node<T>* ptr;
+
+    public:
+        iterator() : ptr(NULL) {}
+        iterator(Node<T>* p) : ptr(p) {}
+
+        T& operator*() { return ptr->data; }
+
+        iterator& operator++() // ++it / 이 강의에서 it++은 생략
+        {
+            this->ptr = this->ptr->next;
+            return *this;
+        }
+
+        iterator& operator--()
+        {
+            ptr = ptr->prev;
+            return *this;
+        }
+
+        bool operator==(const iterator& it) const
+        {
+            return this->ptr == it.ptr;
+        }
+
+        bool operator!=(const iterator& it) const
+        {
+            return this->ptr != it.ptr;
+        }
+
+        friend class DoublyLinkedList;
+    };
+
+public:
+    DoublyLinkedList() 
+    {
+        this->count = 0;
+        this->header = new Node<T> {T(), NULL, NULL};
+        this->trailer = new Node<T> {T(), NULL, NULL};
+
+        header->next = trailer;
+        trailer->prev = header;
+    }
+
+    ~DoublyLinkedList()
+    {
+        while (!empty())
+        {
+            pop_front();
+        }
+
+        delete header;
+        delete trailer;
+    }
+
+    void push_front(const T& val)
+    {
+        insert(begin(), val);
+    }
+
+    void push_back(const T& val)
+    {
+        insert(end(), val);
+    }
+
+    void pop_front()
+    {
+        if (!empty())
+        {
+            erase(begin());
+        }
+    }
+
+    void pop_back()
+    {
+        if (!empty())
+        {
+            erase(--(end()));
+        }
+    }
+
+    void print_all()
+    {
+        Node<T>* current_node = header->next;
+
+        while (current_node != trailer)
+        {
+            std::cout << current_node->data << " ";
+            current_node = current_node->next;
+        }
+        std::cout << std::endl;
+    }
+
+    void print_reverse()
+    {
+        Node<T>* current_node = trailer->prev;
+
+        while (current_node != header)
+        {
+            std::cout << current_node->data << " ";
+            current_node = current_node->prev;
+        }
+        std::cout << std::endl;
+    }
+
+    bool empty()
+    {
+        return count == 0;
+    }
+
+    unsigned int size()
+    {
+        return count;
+    }
+
+    // iterator 관련 메소드
+    iterator begin() const
+    {
+        return iterator(header->next);
+    }
+
+    iterator end() const
+    {
+        return iterator(trailer);
+    }
+
+    iterator find(const T& val)
+    {
+        Node<T>* curr = header->next;
+
+        while (curr != trailer && curr->data != val)
+        {
+            curr = curr->next;
+        }
+
+        return iterator(curr);
+    }
+
+    void insert(const iterator& pos, const T& val)
+    {
+        Node<T>* p = pos.ptr;
+        Node<T>* new_node = new Node<T> {val, p->prev, p};
+
+        new_node->next->prev = new_node;
+        new_node->prev->next = new_node;
+
+        count++;
+    }
+
+    void erase(const iterator& pos)
+    {
+        Node<T>* p = pos.ptr;
+
+        p->prev->next = p->next;
+        p->next->prev = p->prev;
+
+        delete p;
+        p = nullptr;
+    
+        count--;
+    }
+
+private:
+    Node<T>* header;
+    Node<T>* trailer;
+    unsigned int count;
+};
+
+int main()
+{
+    DoublyLinkedList<int> dll;
+    dll.push_back(10);
+    dll.push_back(20);
+
+    dll.push_front(30);
+    dll.push_front(40);
+
+    // dll.print_all(); // 40 30 10 20
+    // dll.print_reverse(); // 20 10 30 40
+
+    auto it = dll.find(20);
+    if (it != dll.end())
+        dll.insert(it, 50);
+
+    for (auto n : dll) // begin / end / ++ / != / * 로직이 있으면 됨
+    {
+        std::cout << n << " "; // 40 30 10 50 20
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+```
