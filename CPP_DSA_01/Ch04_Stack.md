@@ -205,4 +205,134 @@ int main()
 # S02. 스택의 응용: 문자열과 벡터 순서 뒤집기
 
 
-### 1. 
+### 1. 문자열 뒤집기
+- 문자열의 각 문자 순서를 역순으로 변경
+    - HELLO -> OLLEH
+    - RACECAR -> RACECAR => Palindrome (회문 / 역순으로 바꾸어도 같은 글자)
+
+- 문자열을 역순으로 뒤집는 방법은 여러 가지가 있지만, 스택을 사용하여 변경할 수 있음
+
+
+### 2. 스택을 이용한 문자열 뒤집기
+- 문자열의 각 문자를 스택에 push 한 후, 다시 스택에서 문자를 하나씩 pop하여 출력 문자열을 생성
+- HELLO => 스택에 넣음
+- stack [HELLO] => OLLEH로 가져오게 됨
+
+
+### 3. 문자열 뒤집기 구현
+```cpp
+#include <iostream>
+#include <string>
+#include <stack>
+using namespace std;
+
+string reverse(const string& str)
+{
+    stack<char> stk;
+
+    for (char c : str)
+    {
+        stk.push(c);
+    }
+
+    string res = "";
+    while (!stk.empty())
+    {
+        res += stk.top(); // append는 string을 붙이는 것 / += char을 붙일 수 있음
+        stk.pop();
+    }
+
+    return res;
+}
+
+int main()
+{
+    string str = "HELLO";
+    cout << str << " => " << reverse(str) << endl;
+
+    return 0;
+}
+```
+
+
+### 4. 벡터 순서 뒤집기
+- 벡터의 원소를 역순으로 변경하는 작업
+    - 임의의 데이터 타입일 경우
+
+
+### 5. 스택을 이용한 벡터 순서 뒤집기
+- 벡터의 모든 원소를 스택에 push한 후, 스택에서 원소를 하나씩 pop하여 차례대로 벡터에 넣음
+
+
+### 6. 벡터 순서 뒤집기 구현
+- 입력된 벡터 자체를 반환하도록 구현
+```cpp
+#include <iostream>
+#include <string>
+#include <vector>
+#include <stack>
+using namespace std;
+
+template <typename T>
+void reverse(vector<T>& vec)
+{
+    stack<T, vector<T>> stk(vec);
+    // 기본 컨테이너로 vector를 사용할 수 있음
+    // 이때 생성자의 인자로 vec을 넣어주면 해당 vector의 원소를 자례대로 push를 함
+
+    // for (const auto& e : vec)
+    // {
+    //     stk.push(e);
+    // }
+
+    for (int i = 0; i < vec.size(); i++)
+    {
+        vec[i] = stk.top();
+        stk.pop();
+    }
+}
+
+int main()
+{
+    vector<int> vec1 {1, 2, 3, 4, 5};
+
+    reverse(vec1);
+
+    for (auto& e : vec1)
+    {
+        cout << e << " ";
+    }
+    cout << endl;
+
+    vector<string> vec2 {"Hello", "World"};
+
+    reverse(vec2);
+
+    for (auto& e : vec2)
+    {
+        cout << e << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
+```
+
+- 기본 컨테이너로 vector를 사용할 수 있음
+- 이때 생성자의 인자로 vec을 넣어주면 해당 vector의 원소를 자례대로 push를 함
+
+
+### 7. 추가 내용
+- 스택을 사용하여 뒤집기 구현은 시간 복잡도 O(N) / 공간 복잡도 O(N)이 필요함
+- 만약 O(1)에 해야한다면 (코딩 테스트 혹은 실무)
+    - std::reverse(str.begin(), str.end())
+    - 내부적으로 투 포인터 swap 방식을 주로 사용함
+
+- stack은 begin() / end()를 지원하지 않음
+    - stack은 엄연하게 LIFO를 보장해야함
+    - 임의 원소 접근을 할 수 있으면 안됨
+
+- stack<T, vector<T>> stk(vec)의 trade-off
+    - 내부적으로 벡터 전체를 복사한 후 다시 원본에 덮어쓰는 구조
+    - 메모리가 원본의 2배가 필요함
+    - 병목이 발생할 수도 있음
